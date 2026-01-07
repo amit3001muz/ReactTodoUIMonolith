@@ -1,8 +1,61 @@
-trigger: none 
-pool: Default
+trigger: none
 
-steps: 
-- task: PowerShell@2
-  inputs:
-    targetType: 'inline'
-    script: 'Write-Host "Hello World"'
+pool: delhi-agent-pool
+
+stages:
+  - stage: dependencyscanner
+    displayName: dependency scan ho raha hai
+    jobs:
+      - job: dependencyscanner
+        displayName: dependency scan ready
+        steps:
+        - task: NodeTool@0
+          inputs:
+            versionSource: 'spec'
+            versionSpec: '16.x'
+        - task: PowerShell@2
+          inputs:
+            targetType: 'inline'
+            script: |
+              npm install -g retire
+              npm install
+              retire --exitwith 0
+
+  - stage: sonarqubescanning
+    displayName: code scanning for security
+    jobs:
+      - job: sonarqubescanning
+        displayName: code scanning with job
+        steps:
+        - task: SonarCloudPrepare@4
+          inputs:
+            SonarQube: 'sonarqube'
+            organization: 'amit3001muz'
+            scannerMode: 'cli'
+            configMode: 'manual'
+            cliProjectKey: 'sonar.projectkey'
+            cliProjectName: 'sonar.projectname'
+            cliSources: '.'
+        - task: SonarCloudAnalyze@4
+          inputs:
+            jdkversion: 'JAVA_HOME_17_X64'
+        - task: SonarCloudPublish@4
+          inputs:
+            pollingTimeoutSec: '300'
+  - stage: lintingscanningforcode
+    displayName: linting of code
+    jobs:
+      - job: lintingwithjobs
+        displayName: linting with job
+        steps:
+        - task: NodeTool@0
+          inputs:
+            versionSource: 'spec'
+            versionSpec: '16.x'
+        - task: PowerShell@2
+          inputs:
+            targetType: 'inline'
+            script: |
+              npm install   
+              npm run lint || true
+              npx stylelint "**/*.{css,scss}" || true
