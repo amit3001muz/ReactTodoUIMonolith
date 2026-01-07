@@ -33,8 +33,8 @@ stages:
             organization: 'amit3001muz'
             scannerMode: 'cli'
             configMode: 'manual'
-            cliProjectKey: 'amit'
-            cliProjectName: 'amit'
+            cliProjectKey: 'amit3001muz_ReactTodoUIMonolith'
+            cliProjectName: 'ReactTodoUIMonolith'
             cliSources: '.'
         - task: SonarCloudAnalyze@4
           inputs:
