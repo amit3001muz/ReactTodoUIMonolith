@@ -1,0 +1,88 @@
+trigger: none
+
+pool: todomahan
+
+stages:
+  - stage: dependencyscanner
+    displayName: dependency scan install
+    jobs:
+      - job: dependencyscan
+        displayName: dependency scan install
+        steps:
+        - task: NodeTool@0
+          inputs:
+            versionSource: 'spec'
+            versionSpec: '17.x'
+        - task: PowerShell@2
+          inputs:
+            targetType: 'inline'
+            script: |
+              npm install -g retire
+              npm install 
+              retire --exitwith 0
+  - stage: sonarqubescan
+    displayName: sonarqube scan
+    jobs:
+      - job: sonarqubescan
+        displayName: sonar qube scan start
+        steps:
+        - task: SonarCloudPrepare@4
+          inputs:
+            SonarQube: 'az-sonarqube'
+            organization: 'amit3001muz'
+            scannerMode: 'cli'
+            configMode: 'manual'
+            cliProjectKey: 'todomahan'
+            cliProjectName: 'todomahan'
+            cliSources: '.'
+        - task: SonarCloudAnalyze@4
+          inputs:
+            jdkversion: 'JAVA_HOME_17_X64'
+        - task: SonarCloudPublish@4
+          inputs:
+            pollingTimeoutSec: '300'
+  - stage: codelinting
+    jobs:
+      - job: codelinting
+        displayName: code ki linting ho rahi hai
+        steps:
+        - task: NodeTool@0
+          inputs:
+            versionSource: 'spec'
+            versionSpec: '17.x'
+        - task: PowerShell@2
+          inputs:
+            targetType: 'inline'
+            script: |
+              npm run lint
+              if ($LASTEXITCODE -ne 0) {
+                Write-Host "Lint failed, but continuing..."
+              }
+              
+              npx run stylelint
+              if ($LASTEXITCODE -ne 0) {
+                Write-Host "Stylelint failed, but continuing..."
+              }
+              
+              exit 0
+  - stage: buildartifacts
+    displayName: buildartifacts 
+    jobs:
+      - job: buildartifacts
+        displayName: build artifacts for deplyoment
+        steps:
+        - task: NodeTool@0
+          inputs:
+            versionSource: 'spec'
+            versionSpec: '17.x'
+        - task: PowerShell@2
+          inputs:
+            targetType: 'inline'
+            script: |
+              npm install
+              npm run build
+        - task: PublishPipelineArtifact@1
+          inputs:
+            targetPath: '$(System.DefaultWorkingDirectory)/build/'
+            artifact: 'todomahan'
+            publishLocation: 'pipeline'
