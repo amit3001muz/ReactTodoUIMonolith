@@ -32,8 +32,8 @@ stages:
             organization: 'amit3001muz'
             scannerMode: 'cli'
             configMode: 'manual'
-            cliProjectKey: 'todomahan'
-            cliProjectName: 'todomahan'
+            cliProjectKey: 'amit3001muz'
+            cliProjectName: 'amit3001muz'
             cliSources: '.'
         - task: SonarCloudAnalyze@4
           inputs:
